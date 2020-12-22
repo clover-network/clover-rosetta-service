@@ -19,7 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const RosettaSDK = require('../../..');
+const RosettaSDK = require('../../../sdk');
 const RosettaClient = RosettaSDK.Client;
 
 // Create an instance of APIClient and configure it.

@@ -19,39 +19,31 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const RosettaSDK = require('../../..');
+const RosettaSDK = require('../../../sdk');
 
-// Create an instance of Fetcher
-const fetcher = new RosettaSDK.Fetcher({
-  server: {
-    protocol: 'http',
-    host: 'localhost',
-    port: '8080',
-  },
+const ServiceHandlers = require('./services');
+const networkIdentifier = require('./network');
+
+const asserter = RosettaSDK.Asserter.NewServer(
+  ['Transfer', 'Reward'],
+  false,
+  [networkIdentifier],
+);
+
+/* Create a server configuration */
+const Server = new RosettaSDK.Server({
+  URL_PORT: 8080,
 });
 
-const main = (async function () {
-  const { primaryNetwork, networkStatus } = await fetcher.initializeAsserter();
+// Register global asserter
+Server.useAsserter(asserter);
 
-  console.log(`Primary Network: ${JSON.stringify(primaryNetwork)}`);
-  console.log(`Network Status: ${JSON.stringify(networkStatus)}`);
+/* Data API: Network */
+Server.register('/network/list', ServiceHandlers.Network.networkList);
+Server.register('/network/options', ServiceHandlers.Network.networkOptions);
+Server.register('/network/status', ServiceHandlers.Network.networkStatus);
 
-  const block = await fetcher.blockRetry(
-    primaryNetwork,
-    new RosettaSDK.Utils.constructPartialBlockIdentifier(networkStatus.current_block_identifier),
-  );
-
-  console.log(`Current Block: ${JSON.stringify(block)}`);
-
-  const blockMap = fetcher.blockRange(
-    primaryNetwork,
-    networkStatus.genesis_block_identifier.index,
-    networkStatus.genesis_block_identifier.index + 10,
-  );
-
-  console.log(`Current Range: ${JSON.stringify(blockMap)}`);
-});
-
-main().catch(e => {
-  console.error(e);
-})
+/* Data API: Block */
+Server.register('/block', ServiceHandlers.Block.block);
+Server.register('/block/transaction', ServiceHandlers.Block.blockTransaction);
+Server.launch();

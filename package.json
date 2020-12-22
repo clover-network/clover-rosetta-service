@@ -1,7 +1,7 @@
 {
-  "name": "rosetta-node-sdk",
-  "version": "1.4.1b",
-  "description": "A Standard for Blockchain Interaction",
+  "name": "clover-rosetta-service",
+  "version": "1.0.0",
+  "description": "Clover rosetta nodejs implementation",
   "main": "index.js",
   "scripts": {
     "prestart": "npm install",

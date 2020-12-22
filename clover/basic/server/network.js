@@ -20,6 +20,6 @@
  */
 
 const RosettaSDK = require('../../../sdk');
-const networkIdentifier = new RosettaSDK.Client.NetworkIdentifier('Rosetta', 'Testnet');
+const networkIdentifier = new RosettaSDK.Client.NetworkIdentifier('Clover', 'Testnet');
 
 module.exports = networkIdentifier;

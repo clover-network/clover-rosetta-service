@@ -52,7 +52,7 @@ const networkOptions = async (params) => {
   const { networkRequest } = params;
 
   const rosettaVersion = '1.4.0';
-  const nodeVersion = '0.0.1';
+  const nodeVersion = '12.19.0';
 
   const operationStatuses = [
     new Types.OperationStatus('Success', true),

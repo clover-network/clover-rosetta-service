@@ -1,28 +1,9 @@
-/**
- * Copyright (c) 2020 DigiByte Foundation NZ Limited
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 const RosettaSDK = require('../../../sdk');
-
+const { rosetta_port, ws_port } = require('../config/config');
 const ServiceHandlers = require('./services');
 const networkIdentifier = require('./network');
+const WebSocketServer = require('websocket').server;
+const http = require('http');
 
 const asserter = RosettaSDK.Asserter.NewServer(
   ['Transfer', 'Reward'],
@@ -30,20 +11,55 @@ const asserter = RosettaSDK.Asserter.NewServer(
   [networkIdentifier],
 );
 
-/* Create a server configuration */
-const Server = new RosettaSDK.Server({
-  URL_PORT: 8080,
-});
+function startRosetta() {
+  /* Create a server configuration */
+  const Server = new RosettaSDK.Server({
+    URL_PORT: rosetta_port,
+  });
 
 // Register global asserter
-Server.useAsserter(asserter);
+  Server.useAsserter(asserter);
 
-/* Data API: Network */
-Server.register('/network/list', ServiceHandlers.Network.networkList);
-Server.register('/network/options', ServiceHandlers.Network.networkOptions);
-Server.register('/network/status', ServiceHandlers.Network.networkStatus);
+  /* Data API: Network */
+  Server.register('/network/list', ServiceHandlers.Network.networkList);
+  Server.register('/network/options', ServiceHandlers.Network.networkOptions);
+  Server.register('/network/status', ServiceHandlers.Network.networkStatus);
 
-/* Data API: Block */
-Server.register('/block', ServiceHandlers.Block.block);
-Server.register('/block/transaction', ServiceHandlers.Block.blockTransaction);
-Server.launch();
+  /* Data API: Block */
+  Server.register('/block', ServiceHandlers.Block.block);
+  Server.register('/block/transaction', ServiceHandlers.Block.blockTransaction);
+  Server.launch();
+}
+
+function startWs() {
+  const server = http.createServer(function(request, response) {
+    console.log((new Date()) + ' Received request for ' + request.url);
+    response.writeHead(404);
+    response.end();
+  });
+  server.listen(ws_port, function() {
+    console.log(`Ws is listening on port ${ws_port}`);
+  });
+
+  const wsServer = new WebSocketServer({
+    httpServer: server,
+    autoAcceptConnections: true
+  });
+
+  wsServer.on('request', function(request) {
+    const connection = request.accept('echo-protocol', request.origin);
+    console.log((new Date()) + ' Connection accepted.');
+    connection.on('message', function(message) {
+      if (message.type === 'utf8') {
+        console.log('Received Message: ' + message.utf8Data);
+        connection.sendUTF(message.utf8Data);
+      }
+    });
+    connection.on('close', function(reasonCode, description) {
+      console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+    });
+  });
+}
+
+startRosetta();
+startWs();

@@ -35,6 +35,8 @@
     "ono": "^5.0.1",
     "openapi-sampler": "^1.0.0-beta.15",
     "rosetta-node-sdk-client": "git+https://github.com/SmartArray/rosetta-node-sdk-client.git#1.4.1",
+    "sequelize": "^6.3.5",
+    "sqlite3": "^5.0.0",
     "superagent": "3.7.0",
     "swagger-ui-express": "^4.0.2",
     "web3": "^1.3.1",

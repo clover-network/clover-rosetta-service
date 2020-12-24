@@ -5,6 +5,7 @@ const networkIdentifier = require('./network');
 const WebSocketServer = require('websocket').server;
 const http = require('http');
 const Bree = require('bree');
+const Status = require('../data/models/status');
 
 const asserter = RosettaSDK.Asserter.NewServer(
   ['Transfer', 'Reward'],
@@ -83,13 +84,38 @@ function startJob() {
   const bree = new Bree({
     jobs: [{
       name: 'BtcNetworkStatus',
-      interval: '10m'
+      interval: '14s'
     }]
   });
-  bree.start();
   bree.run();
+  bree.start();
 }
 
-startRosetta();
-startWs();
-startJob();
+async function initDb() {
+  await Status.sync({ force: true });
+  return Promise.all([
+    Status.create({
+      key: 'current_btc_block',
+      value: '0'
+    }),
+    Status.create({
+      key: 'current_eth_block',
+      value: '0'
+    }),
+    Status.create({
+      key: 'current_dot_block',
+      value: '0'
+    }),
+    Status.create({
+      key: 'current_clv_block',
+      value: '0'
+    }),
+  ]);
+}
+
+(async () => {
+  startRosetta();
+  startWs();
+  await initDb();
+  startJob();
+})();

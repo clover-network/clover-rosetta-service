@@ -21,8 +21,10 @@
 
 const Network = require('./NetworkService');
 const Block = require('./BlockService');
+const GeneralService = require('./GeneralService');
 
 module.exports = {
   Network,
   Block,
+  GeneralService
 };

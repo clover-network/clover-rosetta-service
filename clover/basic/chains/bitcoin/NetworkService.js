@@ -18,8 +18,7 @@ function getChain() {
   });
 }
 
-const networkStatus = async (params) => {
-  const { networkRequest } = params;
+const networkStatus = async () => {
   const chain = await getChain();
   const currentBlockIdentifier = new Types.BlockIdentifier(chain.height, chain.hash);
   const currentBlockTimestamp = moment(chain.time).valueOf();

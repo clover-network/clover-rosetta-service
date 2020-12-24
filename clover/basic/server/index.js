@@ -4,6 +4,7 @@ const ServiceHandlers = require('./services');
 const networkIdentifier = require('./network');
 const WebSocketServer = require('websocket').server;
 const http = require('http');
+const Bree = require('bree');
 
 const asserter = RosettaSDK.Asserter.NewServer(
   ['Transfer', 'Reward'],
@@ -17,17 +18,34 @@ function startRosetta() {
     URL_PORT: rosetta_port,
   });
 
-// Register global asserter
-  Server.useAsserter(asserter);
+  // Register global asserter
+  // Server.useAsserter(asserter);
 
   /* Data API: Network */
-  Server.register('/network/list', ServiceHandlers.Network.networkList);
-  Server.register('/network/options', ServiceHandlers.Network.networkOptions);
-  Server.register('/network/status', ServiceHandlers.Network.networkStatus);
+  Server.register('/network/list', ServiceHandlers.GeneralService.generalService);
+  Server.register('/network/options', ServiceHandlers.GeneralService.generalService);
+  Server.register('/network/status', ServiceHandlers.GeneralService.generalService);
 
   /* Data API: Block */
-  Server.register('/block', ServiceHandlers.Block.block);
-  Server.register('/block/transaction', ServiceHandlers.Block.blockTransaction);
+  Server.register('/block', ServiceHandlers.GeneralService.generalService);
+  Server.register('/block/transaction', ServiceHandlers.GeneralService.generalService);
+
+  /* Data API: Account */
+  Server.register('/account/balance', ServiceHandlers.GeneralService.generalService);
+
+  /* Data API: Mempool */
+  Server.register('/mempool', ServiceHandlers.GeneralService.generalService);
+  Server.register('/mempool/transaction', ServiceHandlers.GeneralService.generalService);
+
+  /* Construction API */
+  Server.register('/construction/metadata', ServiceHandlers.GeneralService.generalService);
+  Server.register('/construction/submit', ServiceHandlers.GeneralService.generalService);
+  Server.register('/construction/combine', ServiceHandlers.GeneralService.generalService);
+  Server.register('/construction/derive', ServiceHandlers.GeneralService.generalService);
+  Server.register('/construction/hash', ServiceHandlers.GeneralService.generalService);
+  Server.register('/construction/parse', ServiceHandlers.GeneralService.generalService);
+  Server.register('/construction/payloads', ServiceHandlers.GeneralService.generalService);
+  Server.register('/construction/preprocess', ServiceHandlers.GeneralService.generalService);
   Server.launch();
 }
 
@@ -61,5 +79,17 @@ function startWs() {
   });
 }
 
+function startJob() {
+  const bree = new Bree({
+    jobs: [{
+      name: 'BtcNetworkStatus',
+      interval: '10m'
+    }]
+  });
+  bree.start();
+  bree.run();
+}
+
 startRosetta();
 startWs();
+startJob();

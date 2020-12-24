@@ -5,4 +5,5 @@ module.exports = {
   polkadot_url_ws: 'wss://rpc.polkadot.io',
   rosetta_port: 9911,
   ws_port: 9922,
+  eth_rosetta_service: 'http://proxy.ankr.com/rosetta/ethereum/'
 };

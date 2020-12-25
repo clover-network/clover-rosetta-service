@@ -4,7 +4,7 @@ const Web3 = require("web3");
 const { clover_rpc } = require('../../config/config');
 const web3 = new Web3(new Web3.providers.HttpProvider(clover_rpc));
 
-const networkStatus = async (params) => {
+const networkStatus = async () => {
   const block = await web3.eth.getBlock('latest');
   const currentBlockIdentifier = new Types.BlockIdentifier(block.number, block.hash);
   const currentBlockTimestamp = block.timestamp;

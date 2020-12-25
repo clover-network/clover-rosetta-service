@@ -53,14 +53,26 @@ function startWs() {
 }
 
 function startJob() {
-  const btc = schedule.scheduleJob('*/30 * * * * *', async () => {
+  const btc = schedule.scheduleJob('30 * * * * *', async () => {
     const { run } = require('./jobs/BtcNetworkStatus');
     await run();
   });
   btc.invoke();
 
-  const eth = schedule.scheduleJob('*/15 * * * * *', async () => {
+  const eth = schedule.scheduleJob('*/10 * * * * *', async () => {
     const { run } = require('./jobs/EthNetworkStatus');
+    await run();
+  });
+  eth.invoke();
+
+  const dot = schedule.scheduleJob('*/6 * * * * *', async () => {
+    const { run } = require('./jobs/DotNetworkStatus');
+    await run();
+  });
+  dot.invoke();
+
+  const clv = schedule.scheduleJob('*/6 * * * * *', async () => {
+    const { run } = require('./jobs/ClvNetworkStatus');
     await run();
   });
   eth.invoke();

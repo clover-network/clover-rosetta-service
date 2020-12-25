@@ -15,7 +15,7 @@ async function initApi() {
   return Promise.resolve(Api);
 }
 
-const networkStatus = async (params) => {
+const networkStatus = async () => {
   const api = await initApi();
   const block = await api.rpc.chain.getBlock();
   const currentBlockIdentifier = new Types.BlockIdentifier(block.block.header.number.toString(), block.block.header.hash.toHex());

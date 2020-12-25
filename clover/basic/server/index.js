@@ -58,6 +58,12 @@ function startJob() {
     await run();
   });
   btc.invoke();
+
+  const eth = schedule.scheduleJob('*/15 * * * * *', async () => {
+    const { run } = require('./jobs/EthNetworkStatus');
+    await run();
+  });
+  eth.invoke();
 }
 
 async function initDb() {

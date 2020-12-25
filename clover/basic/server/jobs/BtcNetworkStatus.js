@@ -25,7 +25,17 @@ async function run() {
   if (index !== _.parseInt(lastIndex)) {
     console.log('new btc block detected, reporting with block id: ', index);
     status.value = index;
-    getSender() && getSender().send(JSON.stringify(body));
+    const response = {
+      type: 'network/status',
+      meta: {
+        network_identifier:{
+          blockchain: 'Bitcoin',
+          network: 'Mainnet'
+        },
+      },
+      data: body
+    };
+    getSender() && getSender().send(JSON.stringify(response));
     await status.save();
   }
 }

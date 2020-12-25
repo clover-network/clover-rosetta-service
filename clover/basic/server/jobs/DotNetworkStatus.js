@@ -1,4 +1,4 @@
-const { networkStatus } = require('../../chains/polkadot/NetworkService');
+const { networkStatus } = require('../../chains/polkadot/service');
 const _ = require('lodash');
 const axios = require('axios');
 const RosettaSDK = require('../../../../sdk');
@@ -13,7 +13,7 @@ async function run() {
     }
   });
   const lastIndex = status.dataValues.value;
-  const body = await networkStatus();
+  const body = await networkStatus('Polkadot');
   const index = body.current_block_identifier.index;
   if (index !== _.parseInt(lastIndex)) {
     console.log('new dot block detected, reporting with block id: ', index);

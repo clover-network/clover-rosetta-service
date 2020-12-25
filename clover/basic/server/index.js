@@ -53,7 +53,7 @@ function startWs() {
 }
 
 function startJob() {
-  const btc = schedule.scheduleJob('30 * * * * *', async () => {
+  const btc = schedule.scheduleJob('*/30 * * * * *', async () => {
     const { run } = require('./jobs/BtcNetworkStatus');
     await run();
   });

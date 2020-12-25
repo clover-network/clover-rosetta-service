@@ -1,10 +1,8 @@
 const RosettaSDK = require('../../../sdk');
-const { rosetta_port, ws_port } = require('../config/config');
+const { rosetta_port } = require('../config/config');
 const ServiceHandlers = require('./services');
 const networkIdentifier = require('./network');
-const WebSocketServer = require('websocket').server;
-const http = require('http');
-const Bree = require('bree');
+const schedule = require('node-schedule');
 const Status = require('../data/models/status');
 
 const asserter = RosettaSDK.Asserter.NewServer(
@@ -51,44 +49,15 @@ function startRosetta() {
 }
 
 function startWs() {
-  const server = http.createServer(function(request, response) {
-    console.log((new Date()) + ' Received request for ' + request.url);
-    response.writeHead(404);
-    response.end();
-  });
-  server.listen(ws_port, function() {
-    console.log(`Ws is listening on port ${ws_port}`);
-  });
-
-  const wsServer = new WebSocketServer({
-    httpServer: server,
-    autoAcceptConnections: true
-  });
-
-  wsServer.on('request', function(request) {
-    const connection = request.accept('echo-protocol', request.origin);
-    console.log((new Date()) + ' Connection accepted.');
-    connection.on('message', function(message) {
-      if (message.type === 'utf8') {
-        console.log('Received Message: ' + message.utf8Data);
-        connection.sendUTF(message.utf8Data);
-      }
-    });
-    connection.on('close', function(reasonCode, description) {
-      console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
-    });
-  });
+  require('../socket/socket').initWsServer();
 }
 
 function startJob() {
-  const bree = new Bree({
-    jobs: [{
-      name: 'BtcNetworkStatus',
-      interval: '14s'
-    }]
+  const btc = schedule.scheduleJob('*/30 * * * * *', async () => {
+    const { run } = require('./jobs/BtcNetworkStatus');
+    await run();
   });
-  bree.run();
-  bree.start();
+  btc.invoke();
 }
 
 async function initDb() {

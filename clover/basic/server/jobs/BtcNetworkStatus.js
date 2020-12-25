@@ -4,8 +4,9 @@ const axios = require('axios');
 const RosettaSDK = require('../../../../sdk');
 const Types = RosettaSDK.Client;
 const Status = require('../../data/models/status');
+const { getSender } = require('../../socket/socket');
 
-(async () => {
+async function run() {
   const networkIdentifier = new RosettaSDK.Client.NetworkIdentifier('Bitcoin', 'Mainnet');
   const networkRequest = new Types.NetworkRequest.constructFromObject({
     network_identifier: networkIdentifier,
@@ -21,11 +22,14 @@ const Status = require('../../data/models/status');
   const result = await axios.post(btc_rosetta_service + 'network/status', networkRequest);
   const body = result.data;
   const index = body.current_block_identifier.index;
-  if (index !== lastIndex) {
-    console.log('reported ', index, lastIndex);
-    status.current_btc_block = index;
+  if (index !== _.parseInt(lastIndex)) {
+    console.log('new btc block detected, reporting with block id: ', index);
+    status.value = index;
+    getSender() && getSender().send(JSON.stringify(body));
     await status.save();
   }
+}
 
-  console.log('done');
-})();
+module.exports = {
+  run
+};

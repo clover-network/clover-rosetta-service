@@ -84,7 +84,7 @@ const block = async (blockHashOrBlockNumber, symbol) => {
           'account': new Types.AccountIdentifier(ex.signer.toString()),
           'amount': new Types.Amount(
             amount,
-            new Types.Currency('DOT', 10)
+            new Types.Currency(symbol === 'Polkadot' ? 'DOT' : 'CLV', symbol === 'Polkadot' ? 10 : 12)
           ),
         }),
       ];
@@ -101,11 +101,54 @@ const block = async (blockHashOrBlockNumber, symbol) => {
   return new Types.BlockResponse(blockDetail);
 };
 
-// block('0x78ae6828eb6f994f8f41383d614ae7fdaa6bbff8e2b5ebdd3cf593db1a5bd5cd').then((res) => {
+
+const blockTransaction = async (blockHashOrBlockNumber, transactionHash, symbol) => {
+  const api = await initApi(symbol);
+  let block;
+  if (_.isNumber(blockHashOrBlockNumber)) {
+    const hash = await api.rpc.chain.getBlockHash(blockHashOrBlockNumber);
+    block = await api.rpc.chain.getBlock(hash);
+  } else {
+    block = await api.rpc.chain.getBlock(blockHashOrBlockNumber);
+  }
+  let timestamp = 0;
+  let transaction = {};
+
+  block.block.extrinsics.forEach((ex, index) => {
+    const transactionIdentifier = new Types.TransactionIdentifier(ex.hash.toHex());
+    const { method: { args, method, section } } = ex;
+    if (`${section}.${method}` === 'timestamp.set') {
+      timestamp = args[0];
+    }
+    if (ex.hash.toHex() === transactionHash) {
+      let amount = 0;
+      if (`${section}.${method}` === 'balances.transfer') {
+        amount = args[1];
+      }
+      const operations = [
+        Types.Operation.constructFromObject({
+          'operation_identifier': new Types.OperationIdentifier(0),
+          'type': `${section}.${method}`,
+          'status': 'Success',
+          'account': new Types.AccountIdentifier(ex.signer.toString()),
+          'amount': new Types.Amount(
+            amount,
+            new Types.Currency(symbol === 'Polkadot' ? 'DOT' : 'CLV', symbol === 'Polkadot' ? 10 : 12)
+          ),
+        }),
+      ];
+      transaction = new Types.Transaction(transactionIdentifier, operations);
+    }
+  });
+  return transaction;
+};
+
+//blockTransaction('0x78ae6828eb6f994f8f41383d614ae7fdaa6bbff8e2b5ebdd3cf593db1a5bd5cd', '0x26a1ed38ecbd837b0a303036b3c8d7994f5cc90e42988e17aff9f3700b878239', 'Polkadot').then((res) => {
 //   console.log(JSON.stringify(res));
-// });
+//});
 
 module.exports = {
   networkStatus,
-  block
+  block,
+  blockTransaction
 };

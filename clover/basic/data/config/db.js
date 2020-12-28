@@ -10,7 +10,7 @@ const sequelize = new Sequelize({
     acquire: 30000,
     idle: 10000
   },
-  storage: './database.sqlite',
+  storage: '/database.sqlite',
   operatorsAliases: false
 });
 

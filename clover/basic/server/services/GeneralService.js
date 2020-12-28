@@ -1,5 +1,5 @@
 const { eth_rosetta_service, btc_rosetta_service } = require('../../config/config');
-const { networkStatus, block } = require('../../chains/polkadot/service');
+const { networkStatus, block, blockTransaction } = require('../../chains/polkadot/service');
 const _ = require('lodash');
 const axios = require('axios');
 
@@ -18,6 +18,10 @@ const generalService = async (params, msg) => {
     if (msg.url === '/block') {
       return await block(payload.block_identifier.hash ? payload.block_identifier.hash : payload.block_identifier.index,
         payload.network_identifier.blockchain);
+    }
+    if (msg.url === '/block/transaction') {
+      return await blockTransaction(payload.block_identifier.hash ? payload.block_identifier.hash : payload.block_identifier.index,
+        payload.transaction_identifier.hash, payload.network_identifier.blockchain);
     }
   }
 };

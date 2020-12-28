@@ -4,6 +4,7 @@ const ServiceHandlers = require('./services');
 const networkIdentifier = require('./network');
 const schedule = require('node-schedule');
 const Status = require('../data/models/status');
+const Summary = require('../data/models/summary');
 
 const asserter = RosettaSDK.Asserter.NewServer(
   ['Transfer', 'Reward'],
@@ -24,6 +25,7 @@ function startRosetta() {
   Server.register('/network/list', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/options', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/status', ServiceHandlers.GeneralService.generalService);
+  Server.register('/network/summary', ServiceHandlers.GeneralService.generalService);
 
   /* Data API: Block */
   Server.register('/block', ServiceHandlers.GeneralService.generalService);
@@ -45,6 +47,8 @@ function startRosetta() {
   Server.register('/construction/parse', ServiceHandlers.GeneralService.generalService);
   Server.register('/construction/payloads', ServiceHandlers.GeneralService.generalService);
   Server.register('/construction/preprocess', ServiceHandlers.GeneralService.generalService);
+
+  /* other api */
   Server.launch();
 }
 
@@ -76,27 +80,24 @@ function startJob() {
     await run();
   });
   eth.invoke();
+
+  schedule.scheduleJob('30 */2 * * * *', async () => {
+    const { run } = require('./jobs/Summary');
+    await run();
+  });
 }
 
 async function initDb() {
   await Status.sync({ force: true });
+  await Summary.sync({ force: true });
   return Promise.all([
-    Status.create({
-      key: 'current_btc_block',
-      value: '0'
-    }),
-    Status.create({
-      key: 'current_eth_block',
-      value: '0'
-    }),
-    Status.create({
-      key: 'current_dot_block',
-      value: '0'
-    }),
-    Status.create({
-      key: 'current_clv_block',
-      value: '0'
-    }),
+    Status.create({key: 'current_btc_block', value: '0'}),
+    Status.create({key: 'current_eth_block', value: '0'}),
+    Status.create({key: 'current_dot_block', value: '0'}),
+    Status.create({key: 'current_clv_block', value: '0'}),
+    Summary.create({name: 'Bitcoin', price: '26772.43', transactions: '600336533', market: '497064920914', price_change_24h: '-2.78', difficulty: '22117795561453'}),
+    Summary.create({name: 'Ethereum', price: '728.46', transactions: '952024646', market: '82835747820', price_change_24h: '12.09', difficulty: '3787986950,834474', gas_price: '40'}),
+    Summary.create({name: 'Polkadot', price: '5.51', transactions: '496036', market: '4923109321', price_change_24h: '3.77'}),
   ]);
 }
 

@@ -1,10 +1,19 @@
 const { eth_rosetta_service, btc_rosetta_service } = require('../../config/config');
 const { networkStatus, block, blockTransaction } = require('../../chains/polkadot/service');
+const Summary = require('../../data/models/summary');
 const _ = require('lodash');
 const axios = require('axios');
 
 const generalService = async (params, msg) => {
   const payload = params[params.requestParamsKey];
+  if (payload.network_identifier && msg.url === '/network/summary') {
+    return await Summary.findOne({
+      where: {
+        name: payload.network_identifier.blockchain
+      },
+      raw: true
+    });
+  }
   if (payload.network_identifier && payload.network_identifier.blockchain === 'Ethereum') {
     let result = await axios.post(eth_rosetta_service + msg.url, payload);
     return result.data;

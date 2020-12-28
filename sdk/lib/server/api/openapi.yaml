@@ -9,6 +9,27 @@ info:
 servers:
 - url: /
 paths:
+  /network/summary:
+    post:
+      description: This is the Summary API
+      operationId: networkSummary
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloverGeneralResponse'
+          description: Expected response to a json
+      summary: Get Network Summary
+      tags:
+        - Network
+      x-eov-operation-handler: controllers/NetworkController
   /network/list:
     post:
       description: This endpoint returns a list of NetworkIdentifiers that the Rosetta
@@ -1705,6 +1726,8 @@ components:
           type: array
       required:
       - block
+      type: object
+    CloverGeneralResponse:
       type: object
     BlockTransactionRequest:
       description: A BlockTransactionRequest is used to fetch a Transaction included

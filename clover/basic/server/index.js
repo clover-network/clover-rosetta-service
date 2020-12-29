@@ -56,31 +56,14 @@ function startWs() {
   require('../socket/socket').initWsServer();
 }
 
-function startJob() {
-  const btc = schedule.scheduleJob('*/30 * * * * *', async () => {
-    const { run } = require('./jobs/BtcNetworkStatus');
-    await run();
-  });
-  btc.invoke();
+async function startJob() {
+  const { runBtc } = require('./jobs/BtcNetworkStatus');
+  const { runEth } = require('./jobs/EthNetworkStatus');
+  const { runDot } = require('./jobs/DotNetworkStatus');
+  const { runClv } = require('./jobs/ClvNetworkStatus');
+  await Promise.all([runBtc(), runEth(), runDot(), runClv()]);
 
-  const eth = schedule.scheduleJob('*/10 * * * * *', async () => {
-    const { run } = require('./jobs/EthNetworkStatus');
-    await run();
-  });
-  eth.invoke();
-
-  const dot = schedule.scheduleJob('*/6 * * * * *', async () => {
-    const { run } = require('./jobs/DotNetworkStatus');
-    await run();
-  });
-  dot.invoke();
-
-  const clv = schedule.scheduleJob('*/6 * * * * *', async () => {
-    const { run } = require('./jobs/ClvNetworkStatus');
-    await run();
-  });
-  eth.invoke();
-
+  console.log('block chain status all ready, starting to sync block info...');
   schedule.scheduleJob('30 */2 * * * *', async () => {
     const { run } = require('./jobs/Summary');
     await run();
@@ -105,5 +88,5 @@ async function initDb() {
   startRosetta();
   startWs();
   await initDb();
-  startJob();
+  await startJob();
 })();

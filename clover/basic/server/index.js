@@ -64,6 +64,8 @@ async function startJob() {
   runEth();
   runDot();
   runClv();
+  const { clvSummary } = require('./jobs/ClvSummary');
+  clvSummary();
 }
 
 async function initDb() {
@@ -75,6 +77,9 @@ async function initDb() {
     Status.create({key: 'current_eth_block', value: '0'}),
     Status.create({key: 'current_dot_block', value: '0'}),
     Status.create({key: 'current_clv_block', value: '0'}),
+    Status.create({key: 'processed_clv_block', value: '0'}),
+    Status.create({key: 'clv_tx_count', value: '0'}),
+    Status.create({key: 'clv_contract_count', value: '0'}),
     Summary.create({name: 'Bitcoin', price: '26772.43', transactions: '600336533', market: '497064920914', price_change_24h: '-2.78', difficulty: '22117795561453'}),
     Summary.create({name: 'Ethereum', price: '728.46', transactions: '952024646', market: '82835747820', price_change_24h: '12.09', difficulty: '3787986950834474', gas_price: '40'}),
     Summary.create({name: 'Polkadot', price: '5.51', transactions: '496036', market: '4923109321', price_change_24h: '3.77'}),

@@ -1,3 +1,5 @@
 **/node_modules
 *.log
 database.sqlite
+.idea
+sqlite.db

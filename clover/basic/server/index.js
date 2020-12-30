@@ -5,12 +5,9 @@ const networkIdentifier = require('./network');
 const schedule = require('node-schedule');
 const Status = require('../data/models/status');
 const Summary = require('../data/models/summary');
+const Block = require('../data/models/block');
+const Promise = require('bluebird');
 
-const asserter = RosettaSDK.Asserter.NewServer(
-  ['Transfer', 'Reward'],
-  false,
-  [networkIdentifier],
-);
 
 function startRosetta() {
   /* Create a server configuration */
@@ -18,14 +15,12 @@ function startRosetta() {
     URL_PORT: rosetta_port,
   });
 
-  // Register global asserter
-  // Server.useAsserter(asserter);
-
   /* Data API: Network */
   Server.register('/network/list', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/options', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/status', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/summary', ServiceHandlers.GeneralService.generalService);
+  Server.register('/network/tick', ServiceHandlers.GeneralService.generalService);
 
   /* Data API: Block */
   Server.register('/block', ServiceHandlers.GeneralService.generalService);
@@ -57,29 +52,31 @@ function startWs() {
 }
 
 async function startJob() {
-  const { runBtc } = require('./jobs/BtcNetworkStatus');
-  const { runEth } = require('./jobs/EthNetworkStatus');
-  const { runDot } = require('./jobs/DotNetworkStatus');
-  const { runClv } = require('./jobs/ClvNetworkStatus');
-  await Promise.all([runBtc(), runEth(), runDot(), runClv()]);
-
-  console.log('block chain status all ready, starting to sync block info...');
   schedule.scheduleJob('30 */2 * * * *', async () => {
     const { run } = require('./jobs/Summary');
     await run();
   });
+  const { runBtc } = require('./jobs/BtcNetworkStatus');
+  const { runEth } = require('./jobs/EthNetworkStatus');
+  const { runDot } = require('./jobs/DotNetworkStatus');
+  const { runClv } = require('./jobs/ClvNetworkStatus');
+  runBtc();
+  runEth();
+  runDot();
+  runClv();
 }
 
 async function initDb() {
   await Status.sync({ force: true });
   await Summary.sync({ force: true });
+  await Block.sync({ force: true });
   return Promise.all([
     Status.create({key: 'current_btc_block', value: '0'}),
     Status.create({key: 'current_eth_block', value: '0'}),
     Status.create({key: 'current_dot_block', value: '0'}),
     Status.create({key: 'current_clv_block', value: '0'}),
     Summary.create({name: 'Bitcoin', price: '26772.43', transactions: '600336533', market: '497064920914', price_change_24h: '-2.78', difficulty: '22117795561453'}),
-    Summary.create({name: 'Ethereum', price: '728.46', transactions: '952024646', market: '82835747820', price_change_24h: '12.09', difficulty: '3787986950,834474', gas_price: '40'}),
+    Summary.create({name: 'Ethereum', price: '728.46', transactions: '952024646', market: '82835747820', price_change_24h: '12.09', difficulty: '3787986950834474', gas_price: '40'}),
     Summary.create({name: 'Polkadot', price: '5.51', transactions: '496036', market: '4923109321', price_change_24h: '3.77'}),
   ]);
 }

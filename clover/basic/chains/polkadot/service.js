@@ -56,16 +56,16 @@ const block = async (blockHashOrBlockNumber, symbol) => {
   } else {
     block = await api.rpc.chain.getBlock(blockHashOrBlockNumber);
   }
-  const blockIdentifier = new Types.BlockIdentifier(block.block.header.number, block.block.hash,);
-  const parentBlockIdentifier = new Types.BlockIdentifier(block.block.header.number - 1, block.block.header.parentHash);
-  let timestamp = 0;
+  const blockIdentifier = new Types.BlockIdentifier(block.block.header.number, block.block.hash.toString());
+  const parentBlockIdentifier = new Types.BlockIdentifier(block.block.header.number - 1, block.block.header.parentHash.toString());
+  let timestamp = '0';
   const transactions = [];
   const allEvents = await api.query.system.events.at(block.block.header.hash);
   block.block.extrinsics.forEach((ex, index) => {
-    const transactionIdentifier = new Types.TransactionIdentifier(ex.hash.toHex());
+    const transactionIdentifier = new Types.TransactionIdentifier(ex.hash.toHex().toString());
     const { isSigned, meta, method: { args, method, section } } = ex;
     if (`${section}.${method}` === 'timestamp.set') {
-      timestamp = args[0];
+      timestamp = args[0].toString();
     }
     if (isSigned) {
       const events = allEvents.filter(({ phase }) =>

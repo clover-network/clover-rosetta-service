@@ -1,6 +1,7 @@
 const { eth_rosetta_service, btc_rosetta_service } = require('../../config/config');
 const { networkStatus, block, blockTransaction } = require('../../chains/polkadot/service');
 const Summary = require('../../data/models/summary');
+const Block = require('../../data/models/block');
 const _ = require('lodash');
 const axios = require('axios');
 
@@ -11,6 +12,17 @@ const generalService = async (params, msg) => {
       where: {
         name: payload.network_identifier.blockchain
       },
+      raw: true
+    });
+  }
+  if (payload.network_identifier && msg.url === '/network/tick') {
+    return await Block.findAll({
+      where: {
+        name: payload.network_identifier.blockchain
+      },
+      order: [
+        ['id', 'DESC'],
+      ],
       raw: true
     });
   }

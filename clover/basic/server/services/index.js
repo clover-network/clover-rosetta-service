@@ -19,12 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const Network = require('./NetworkService');
-const Block = require('./BlockService');
 const GeneralService = require('./GeneralService');
 
 module.exports = {
-  Network,
-  Block,
   GeneralService
 };

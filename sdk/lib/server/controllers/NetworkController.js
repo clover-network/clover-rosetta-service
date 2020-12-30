@@ -45,9 +45,14 @@ const networkSummary = async (request, response) => {
   await Controller.handleRequest(request, response);
 };
 
+const networkTick = async (request, response) => {
+  await Controller.handleRequest(request, response);
+};
+
 module.exports = {
   networkList,
   networkOptions,
   networkStatus,
   networkSummary,
+  networkTick
 };

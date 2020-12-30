@@ -9,5 +9,11 @@ module.exports = {
   eth_rosetta_service: 'http://proxy.ankr.com/rosetta/ethereum/',
   btc_rosetta_service: 'http://proxy.ankr.com/rosetta/bitcoin/',
   dot_gensis: '0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3',
-  clv_gensis: '0x177faa2eb3975cfb29d14ec337b66656ab120cdaa1656ce1d7cb93e68b06049e'
+  clv_gensis: '0x177faa2eb3975cfb29d14ec337b66656ab120cdaa1656ce1d7cb93e68b06049e',
+  btc_rpc: {
+    host: 'proxy.ankr.com',
+    port: 8332,
+    username: 'rosetta',
+    password: 'rosetta'
+  }
 };

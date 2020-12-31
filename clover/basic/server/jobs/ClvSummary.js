@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const { getSender } = require('../../socket/socket');
+const { broadcast } = require('../../socket/socket');
 const Status = require('../../data/models/status');
 const { sleep } = require('../../utils/utils');
 const Web3 = require('web3');
@@ -12,12 +12,7 @@ async function clvSummary() {
     try {
       let block = await web3.eth.getBlock(lastIndex);
       if (block.transactions.length > 0) {
-        const blockInfo = await Status.findOne({
-          where: {
-            key: 'processed_clv_block'
-          }
-        });
-        let lastIndex = blockInfo.dataValues.value;
+
 
         const txCountInfo = await Status.findOne({
           where: {
@@ -33,13 +28,10 @@ async function clvSummary() {
         });
         let contract = contractInfo.dataValues.value;
 
-        const all = await Promise.all(_.map(block.transactions, id => web3.eth.getTransaction(id)));
-        blockInfo.value = lastIndex;
-        await blockInfo.save();
-
         txCountInfo.value = parseInt(txCount) + block.transactions.length;
         await txCountInfo.save();
 
+        const all = await Promise.all(_.map(block.transactions, id => web3.eth.getTransaction(id)));
         const contracts = _.filter(all, tx => tx.to === null);
         if (contracts.length > 0) {
           contractInfo.value = parseInt(contract) + contracts.length;
@@ -59,12 +51,18 @@ async function clvSummary() {
             total_contract: parseInt(contract) + contracts.length
           }
         };
-        getSender() && getSender().send(JSON.stringify(response));
+        broadcast(JSON.stringify(response));
       }
 
+      await Status.update({
+        value: lastIndex
+      }, {
+        where: {
+          key: 'processed_clv_block'
+        }
+      });
       lastIndex++;
     } catch (e) {
-      console.log(e);
       await sleep(6000);
     }
   }

@@ -1,17 +1,18 @@
 const Sequelize = require('sequelize');
 
-const sequelize = new Sequelize({
+const password = process.env.password || 'clover';
+const sequelize = new Sequelize('clover', 'root', password, {
   host: 'localhost',
-  dialect: 'sqlite',
-  logging: false,
+  port: 3306,
+  dialect: 'mysql',
   pool: {
-    max: 5,
+    max: 10,
     min: 0,
     acquire: 30000,
-    idle: 10000
+    idle: 30000
   },
-  storage: './sqlite.db',
-  operatorsAliases: false
+  logging: false,
+  timezone: '+08:00'
 });
 
 module.exports = {

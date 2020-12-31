@@ -1,7 +1,6 @@
 const RosettaSDK = require('../../../sdk');
 const { rosetta_port } = require('../config/config');
 const ServiceHandlers = require('./services');
-const networkIdentifier = require('./network');
 const schedule = require('node-schedule');
 const Status = require('../data/models/status');
 const Summary = require('../data/models/summary');
@@ -83,7 +82,7 @@ async function initDb() {
     Status.create({key: 'clv_contract_count', value: '0'}),
     Summary.create({name: 'Bitcoin', price: '26772.43', transactions: '600336533', market: '497064920914', price_change_24h: '-2.78', difficulty: '22117795561453'}),
     Summary.create({name: 'Ethereum', price: '728.46', transactions: '952024646', market: '82835747820', price_change_24h: '12.09', difficulty: '3787986950834474', gas_price: '40'}),
-    Summary.create({name: 'Polkadot', price: '5.51', transactions: '496036', market: '4923109321', price_change_24h: '3.77'}),
+    Summary.create({name: 'Polkadot', price: '8.05', transactions: '496036', market: '4923109321', price_change_24h: '9.91'}),
   ]);
 }
 

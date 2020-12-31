@@ -5,7 +5,7 @@ const RosettaSDK = require('../../../../sdk');
 const Types = RosettaSDK.Client;
 const Status = require('../../data/models/status');
 const Block = require('../../data/models/block');
-const { getSender } = require('../../socket/socket');
+const { broadcast } = require('../../socket/socket');
 const { sleep } = require('../../utils/utils');
 const Promise = require('bluebird');
 const BigNumber = require('bignumber.js');
@@ -44,7 +44,6 @@ async function doRun() {
         },
         data: body
       };
-      // getSender() && getSender().send(JSON.stringify(response));
       await status.save();
     }
   } catch (e) {
@@ -98,6 +97,9 @@ async function syncBlock() {
           } else if (tx.metadata && tx.metadata.receipt) {
             rewords = rewords.plus(new BigNumber(Web3.utils.hexToNumberString(tx.metadata.receipt.gasUsed)).multipliedBy(new BigNumber(Web3.utils.hexToNumberString(tx.metadata.gas_price))));
           }
+          if (tx.metadata && tx.metadata.trace && tx.metadata.trace.calls) {
+            tx.metadata.trace = _.omit(tx.metadata.trace, ['calls']);
+          }
         });
         info.rewords = rewords.toString();
         info.raw = LZUTF8.compress(JSON.stringify(result.data), {outputEncoding: 'StorageBinaryString'});
@@ -121,7 +123,7 @@ async function syncBlock() {
           },
           data: info
         };
-        getSender() && getSender().send(JSON.stringify(response));
+        broadcast(JSON.stringify(response));
 
         await sleep(1000);
         start++;

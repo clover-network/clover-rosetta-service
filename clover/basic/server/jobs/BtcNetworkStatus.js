@@ -6,7 +6,7 @@ const Types = RosettaSDK.Client;
 const Status = require('../../data/models/status');
 const Summary = require('../../data/models/summary');
 const Block = require('../../data/models/block');
-const { getSender } = require('../../socket/socket');
+const { broadcast } = require('../../socket/socket');
 const { sleep } = require('../../utils/utils');
 const Promise = require('bluebird');
 const { Op } = require('sequelize');
@@ -43,7 +43,6 @@ async function doRun() {
         },
         data: body
       };
-      // getSender() && getSender().send(JSON.stringify(response));
       await status.save();
     }
   } catch (e) {
@@ -108,7 +107,7 @@ async function syncBlock() {
           },
           data: info
         };
-        getSender() && getSender().send(JSON.stringify(response));
+        broadcast(JSON.stringify(response));
 
         // update difficulty
         const summary = await Summary.findOne({

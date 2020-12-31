@@ -8,7 +8,7 @@ const Block = sequelize.define('block', {
     autoIncrement: true,
   },
   name: Sequelize.STRING,
-  raw: Sequelize.STRING, // data returned from rosetta
+  raw: Sequelize.TEXT('long'), // data returned from rosetta
   block_number: Sequelize.INTEGER,
   block_hash: Sequelize.STRING,
   tx_count: Sequelize.INTEGER,

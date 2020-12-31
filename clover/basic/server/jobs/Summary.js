@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const axios = require('axios');
 const Summary = require('../../data/models/summary');
-const { getSender } = require('../../socket/socket');
+const { broadcast } = require('../../socket/socket');
 
 async function run() {
   const token = new Date().getTime() % 2 === 0 ? 'Bitcoin' : 'Ethereum';
@@ -34,7 +34,7 @@ async function run() {
     },
     data: all
   };
-  getSender() && getSender().send(JSON.stringify(response));
+  broadcast(JSON.stringify(response));
 }
 
 module.exports = {

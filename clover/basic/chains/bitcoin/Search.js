@@ -39,7 +39,7 @@ function isBlock(key) {
   return key.startsWith('0000000000');
 }
 
-search('1BQLNJtMDKmMZ4PyqVFfRuBNvoGhjigBKF');
+search('1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa');
 
 /**
  block info should return the following:

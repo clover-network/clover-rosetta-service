@@ -21,6 +21,7 @@ function startRosetta() {
   Server.register('/network/status', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/summary', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/tick', ServiceHandlers.GeneralService.generalService);
+  Server.register('/network/search', ServiceHandlers.GeneralService.generalService);
 
   /* Data API: Block */
   Server.register('/block', ServiceHandlers.GeneralService.generalService);

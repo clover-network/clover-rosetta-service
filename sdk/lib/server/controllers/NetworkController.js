@@ -49,10 +49,15 @@ const networkTick = async (request, response) => {
   await Controller.handleRequest(request, response);
 };
 
+const networkSearch = async (request, response) => {
+  await Controller.handleRequest(request, response);
+};
+
 module.exports = {
   networkList,
   networkOptions,
   networkStatus,
   networkSummary,
-  networkTick
+  networkTick,
+  networkSearch
 };

@@ -5,6 +5,7 @@ const Block = require('../../data/models/block');
 const Status = require('../../data/models/status');
 const _ = require('lodash');
 const axios = require('axios');
+const { search } = require('./SearchService');
 
 const generalService = async (params, msg) => {
   const payload = params[params.requestParamsKey];
@@ -27,7 +28,7 @@ const generalService = async (params, msg) => {
       return {
         total_tx: txCount,
         total_contract: contract
-      }
+      };
     } else {
       return await Summary.findOne({
         where: {
@@ -47,6 +48,9 @@ const generalService = async (params, msg) => {
       ],
       raw: true
     });
+  }
+  if (payload.network_identifier && msg.url === '/network/search') {
+    return await search(payload.metadata.key);
   }
   if (payload.network_identifier && payload.network_identifier.blockchain === 'Ethereum') {
     let result = await axios.post(eth_rosetta_service + msg.url, payload);

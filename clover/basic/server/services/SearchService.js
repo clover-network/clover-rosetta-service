@@ -48,7 +48,7 @@ async function search(key) {
         result.account.contract_code = code;
         const history = await web3.eth.getPastLogs({fromBlock:0, address:key});
         const trans = await Promise.all(_.chain(history).reverse().take(20).map(t => web3.eth.getTransaction(t.transactionHash)).value());
-        result.contract_transactions = trans;
+        result.account.contract_transactions = trans;
       }
     } else {
       const transaction = await web3.eth.getTransaction(key);

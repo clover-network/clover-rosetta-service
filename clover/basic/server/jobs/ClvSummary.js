@@ -10,10 +10,12 @@ async function clvSummary() {
   let lastIndex = 0;
   while(true) {
     try {
+      let latest = await web3.eth.getBlockNumber();
+      if (lastIndex > latest) {
+        await sleep(3000);
+      }
       let block = await web3.eth.getBlock(lastIndex);
       if (block.transactions.length > 0) {
-
-
         const txCountInfo = await Status.findOne({
           where: {
             key: 'clv_tx_count'

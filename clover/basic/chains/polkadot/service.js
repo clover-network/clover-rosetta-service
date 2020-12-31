@@ -7,6 +7,9 @@ const clvProvider = new Polkadot.WsProvider(clover_url_ws);
 const _ = require('lodash');
 const cloverTypes =  require("./clover-types");
 
+const Web3 = require('web3');
+const { clover_url_http } = require('../../config/config');
+const web3 = new Web3(new Web3.providers.HttpProvider(clover_url_http));
 let DotApi = undefined;
 let ClvAPi = undefined;
 
@@ -147,8 +150,73 @@ const blockTransaction = async (blockHashOrBlockNumber, transactionHash, symbol)
 //   console.log(JSON.stringify(res));
 //});
 
+const blockWeb3 = async (blockHashOrBlockNumber) => {
+  const blk = await web3.eth.getBlock(blockHashOrBlockNumber);
+
+  const blockIdentifier = new Types.BlockIdentifier(blk.number, blk.hash,);
+  const parentBlockIdentifier = new Types.BlockIdentifier(blk.number - 1, blk.parentHash);
+  const timestamp = blk.timestamp;
+  const transactions = [];
+  if (blk.transactions.length > 0) {
+    const all = await Promise.all(_.map(blk.transactions, id => web3.eth.getTransaction(id)));
+    const receipts = await Promise.all(_.map(blk.transactions, id => web3.eth.getTransactionReceipt(id)));
+
+    _.forEach(all, (trans, idx) => {
+      const transactionIdentifier = new Types.TransactionIdentifier(trans.hash);
+      const operations = [
+        Types.Operation.constructFromObject({
+          'operation_identifier': new Types.OperationIdentifier(0),
+          'type': 'FEE',
+          'status': 'SUCCESS',
+          'account': new Types.AccountIdentifier(trans.from),
+          'amount': new Types.Amount(
+            trans.value,
+            new Types.Currency('ETH', 18)
+          ),
+        }),
+      ];
+
+      const transaction = new Types.Transaction(transactionIdentifier, operations);
+      transaction.metadata = {
+        gas_limit: trans.gas,
+        gas_price: trans.gasPrice,
+        receipt: {
+          blockHash: trans.blockHash,
+          blockNumber: trans.blockNumber,
+          cumulativeGasUsed: receipts[idx].cumulativeGasUsed,
+          gasUsed: receipts[idx].gasUsed,
+          logs: receipts[idx].logs,
+          logsBloom: receipts[idx].logsBloom,
+          status: receipts[idx].status,
+          transactionHash: receipts[idx].transactionHash,
+          transactionIndex: receipts[idx].transactionIndex
+        }
+      };
+      transaction.trace = {
+        from: receipts[idx].from,
+        gas: trans.gas,
+        gasUsed: receipts[idx].gasUsed,
+        input: trans.input,
+        to: receipts[idx].to,
+        type: 'FEE',
+        value: trans.value
+      };
+      transactions.push(transaction);
+    });
+  }
+
+  const blockDetail = new Types.Block(
+    blockIdentifier,
+    parentBlockIdentifier,
+    timestamp,
+    transactions,
+  );
+  return new Types.BlockResponse(blockDetail);
+};
+
 module.exports = {
   networkStatus,
   block,
-  blockTransaction
+  blockTransaction,
+  blockWeb3,
 };

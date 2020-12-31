@@ -1,4 +1,4 @@
-const { networkStatus, block } = require('../../chains/polkadot/service');
+const { networkStatus, blockWeb3 } = require('../../chains/polkadot/service');
 const _ = require('lodash');
 const Status = require('../../data/models/status');
 const Block = require('../../data/models/block');
@@ -53,7 +53,7 @@ async function syncBlock() {
   start = start < 0 ? 0 : start;
   while (true) {
     try {
-      const result = await block(start, token);
+      const result = await blockWeb3(start);
       if (result.block) {
         const block = result.block;
         const info = {

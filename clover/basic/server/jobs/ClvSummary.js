@@ -35,27 +35,6 @@ async function clvSummary() {
         txCountInfo.value = parseInt(txCount) + block.transactions.length;
         await txCountInfo.save();
 
-        const all = await Promise.all(_.map(block.transactions, id => web3.eth.getTransaction(id)));
-        const contracts = _.filter(all, tx => tx.to === null);
-        if (contracts.length > 0) {
-          contractInfo.value = parseInt(contract) + contracts.length;
-          await contractInfo.save();
-        }
-
-        const response = {
-          type: 'network/summary',
-          meta: {
-            network_identifier: {
-              blockchain: token,
-              network: 'Mainnet'
-            },
-          },
-          data: {
-            total_tx: parseInt(txCount) + block.transactions.length,
-            total_contract: parseInt(contract) + contracts.length
-          }
-        };
-        broadcast(JSON.stringify(response));
         const info = {
           name: token,
           block_number: block.number,
@@ -66,10 +45,31 @@ async function clvSummary() {
           miner: block.miner
         };
         try {
-          const txs = await Promise.all(_.map(block.transactions, id => web3.eth.getTransaction(id)));
-          block.transactions = txs;
+          const all = await Promise.all(_.map(block.transactions, id => web3.eth.getTransaction(id)));
+          block.transactions = all;
           info.raw = JSON.stringify(block);
           await Index.create(info);
+
+          const contracts = _.filter(all, tx => tx.to === null);
+          if (contracts.length > 0) {
+            contractInfo.value = parseInt(contract) + contracts.length;
+            await contractInfo.save();
+          }
+
+          const response = {
+            type: 'network/summary',
+            meta: {
+              network_identifier: {
+                blockchain: token,
+                network: 'Mainnet'
+              },
+            },
+            data: {
+              total_tx: parseInt(txCount) + block.transactions.length,
+              total_contract: parseInt(contract) + contracts.length
+            }
+          };
+          broadcast(JSON.stringify(response));
         } catch (e) {
         }
       }

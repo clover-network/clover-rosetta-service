@@ -1,5 +1,5 @@
 const { eth_rosetta_service, btc_rosetta_service } = require('../../config/config');
-const { networkStatus, block, blockTransaction } = require('../../chains/polkadot/service');
+const { networkStatus, block, blockTransaction, blockWeb3, blockSubscan } = require('../../chains/polkadot/service');
 const Summary = require('../../data/models/summary');
 const Block = require('../../data/models/block');
 const Status = require('../../data/models/status');
@@ -59,12 +59,18 @@ const generalService = async (params, msg) => {
     let result = await axios.post(btc_rosetta_service + msg.url, payload);
     return result.data;
   } else if (payload.network_identifier) {
+    const chain = payload.network_identifier.blockchain;
+    const blockId = payload.block_identifier.hash ? payload.block_identifier.hash : payload.block_identifier.index;
+
     if (msg.url === '/network/status') {
       return await networkStatus(payload.network_identifier.blockchain);
     }
     if (msg.url === '/block') {
-      return await block(payload.block_identifier.hash ? payload.block_identifier.hash : payload.block_identifier.index,
-        payload.network_identifier.blockchain);
+      if (chain === 'Clover') {
+        return blockWeb3(blockId);
+      } else {
+        return blockSubscan(blockId);
+      }
     }
     if (msg.url === '/block/transaction') {
       return await blockTransaction(payload.block_identifier.hash ? payload.block_identifier.hash : payload.block_identifier.index,

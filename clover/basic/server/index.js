@@ -5,6 +5,7 @@ const schedule = require('node-schedule');
 const Status = require('../data/models/status');
 const Summary = require('../data/models/summary');
 const Block = require('../data/models/block');
+const Index = require('../data/models/index');
 const Promise = require('bluebird');
 
 
@@ -72,6 +73,7 @@ async function initDb() {
   await Status.sync({ force: true });
   await Summary.sync({ force: true });
   await Block.sync({ force: true });
+  await Index.sync({ force: true });
   return Promise.all([
     Status.create({key: 'current_btc_block', value: '0'}),
     Status.create({key: 'current_eth_block', value: '0'}),

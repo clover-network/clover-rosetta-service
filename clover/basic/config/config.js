@@ -15,5 +15,11 @@ module.exports = {
     port: 8332,
     username: 'rosetta',
     password: 'rosetta'
+  },
+  subscan: {
+    block_api: 'https://polkadot.subscan.io/api/scan/block',
+    metadata: 'https://polkadot.subscan.io/api/scan/metadata',
+    search_api: 'https://polkadot.subscan.io/api/scan/search',
+    token: ''
   }
 };

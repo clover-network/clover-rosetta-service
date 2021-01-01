@@ -1,4 +1,4 @@
-const { networkStatus, block } = require('../../chains/polkadot/service');
+const { blockSubscan, networkStatus } = require('../../chains/polkadot/service');
 const _ = require('lodash');
 const Status = require('../../data/models/status');
 const Block = require('../../data/models/block');
@@ -52,7 +52,10 @@ async function syncBlock() {
   start = start < 0 ? 0 : start;
   while (true) {
     try {
-      const result = await block(start, token);
+      const result = await blockSubscan(start);
+      if (!result) {
+        await sleep(3000);
+      }
       if (result.block) {
         const block = result.block;
         const info = {
@@ -61,7 +64,8 @@ async function syncBlock() {
           block_hash: block.block_identifier.hash,
           timestamp: block.timestamp,
           tx_count: block.transactions.length,
-          used: 0
+          used: 0,
+          miner: block.miner
         };
 
         info.raw = LZUTF8.compress(JSON.stringify(result), {outputEncoding: 'StorageBinaryString'});
@@ -86,7 +90,6 @@ async function syncBlock() {
           data: info
         };
         broadcast(JSON.stringify(response));
-
         await sleep(1000);
         start++;
       }

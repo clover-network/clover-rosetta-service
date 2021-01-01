@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const { broadcast } = require('../../socket/socket');
 const Status = require('../../data/models/status');
+const Index = require('../../data/models/index');
 const { sleep } = require('../../utils/utils');
 const Web3 = require('web3');
 const { clover_url_http } = require('../../config/config');
@@ -8,6 +9,7 @@ const web3 = new Web3(new Web3.providers.HttpProvider(clover_url_http));
 
 async function clvSummary() {
   let lastIndex = 0;
+  const token = 'Clover';
   while(true) {
     try {
       let latest = await web3.eth.getBlockNumber();
@@ -44,7 +46,7 @@ async function clvSummary() {
           type: 'network/summary',
           meta: {
             network_identifier: {
-              blockchain: 'Clover',
+              blockchain: token,
               network: 'Mainnet'
             },
           },
@@ -54,6 +56,19 @@ async function clvSummary() {
           }
         };
         broadcast(JSON.stringify(response));
+        const txs = await Promise.all(_.map(block.transactions, id => web3.eth.getTransaction(id)));
+        const info = {
+          name: token,
+          block_number: block.number,
+          block_hash: block.hash,
+          timestamp: block.timestamp,
+          tx_count: block.transactions.length,
+          used: 0,
+          miner: block.miner
+        };
+        block.transactions = txs;
+        info.raw = JSON.stringify(block);
+        await Index.create(info);
       }
 
       await Status.update({

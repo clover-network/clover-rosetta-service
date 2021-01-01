@@ -1,11 +1,13 @@
 const RosettaSDK = require('../../../../sdk');
 const Types = RosettaSDK.Client;
 const Polkadot = require("@polkadot/api");
-const { polkadot_url_ws, clover_url_ws, dot_gensis, clv_gensis } = require('../../config/config');
+const { polkadot_url_ws, clover_url_ws, dot_gensis, clv_gensis, subscan: { block_api, metadata } } = require('../../config/config');
 const dotProvider = new Polkadot.WsProvider(polkadot_url_ws);
 const clvProvider = new Polkadot.WsProvider(clover_url_ws);
 const _ = require('lodash');
 const cloverTypes =  require("./clover-types");
+const axios = require('axios');
+const { broadcast } = require('../../socket/socket');
 
 const Web3 = require('web3');
 const { clover_url_http } = require('../../config/config');
@@ -48,6 +50,17 @@ const networkStatus = async (symbol) => {
     genesisBlockIdentifier,
     peers,
   );
+};
+
+const networkStatusSubscan = async () => {
+  const result = await axios.post(metadata, {}, {
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+  if (result.status === 200) {
+    return result.data.data;
+  }
 };
 
 const block = async (blockHashOrBlockNumber, symbol) => {
@@ -150,6 +163,111 @@ const blockTransaction = async (blockHashOrBlockNumber, transactionHash, symbol)
 //   console.log(JSON.stringify(res));
 //});
 
+const blockSubscan = async (blockId) => {
+  const data = _.isNumber(blockId) ? {
+    block_num: blockId
+  } : {
+    block_hash: blockId
+  };
+
+  const meta = await networkStatusSubscan();
+  if (_.isNumber(blockId) && blockId > meta.blockNum) {
+    return;
+  }
+  const result = await querySubscan(data);
+  if (result.code === 0) {
+
+    const response = {
+      type: 'network/summary',
+      meta: {
+        network_identifier: {
+          blockchain: 'Polkadot',
+          network: 'Mainnet'
+        },
+      },
+      data: meta
+    };
+    broadcast(JSON.stringify(response));
+
+    const blk = result.data;
+    const blockIdentifier = new Types.BlockIdentifier(blk.block_num, blk.hash,);
+    const parentBlockIdentifier = new Types.BlockIdentifier(blk.block_num - 1, blk.parent_hash);
+    const timestamp = blk.block_timestamp;
+    const transactions = [];
+    _.forEach(blk.extrinsics, (ex, idx) => {
+      if (!ex.extrinsic_hash) {
+        return;
+      }
+      const transactionIdentifier = new Types.TransactionIdentifier(ex.extrinsic_hash);
+      let amount = 0;
+      let to = '';
+      if (ex.call_module_function === 'transfer' && ex.call_module === 'balances') {
+        const params = JSON.parse(ex.params);
+        to = _.find(params, p => p.name === 'dest').value;
+        amount = _.find(params, p => p.name === 'value').value;
+      }
+      const operations = [
+        Types.Operation.constructFromObject({
+          'operation_identifier': new Types.OperationIdentifier(0),
+          'type': ex.call_module_function.toUpperCase(),
+          'status': ex.finalized ? 'SUCCESS' : 'FAILED',
+          'account': new Types.AccountIdentifier(ex.account_id),
+          'amount': new Types.Amount(
+            amount,
+            new Types.Currency('DOT', 10)
+          ),
+        }),
+      ];
+
+      const transaction = new Types.Transaction(transactionIdentifier, operations);
+      transaction.metadata = {
+        gas_limit: ex.fee,
+        gas_price: 1,
+        receipt: {
+          blockHash: blk.hash,
+          blockNumber: blk.block_num,
+          gasUsed: ex.fee,
+          status: ex.finalized,
+          transactionHash: ex.extrinsic_hash,
+          transactionIndex: ex.extrinsic_index
+        }
+      };
+      transaction.trace = {
+        from: ex.account_id,
+        gas: 1,
+        gasUsed: ex.fee,
+        input: ex.params,
+        to: to,
+        type: ex.call_module_function.toUpperCase(),
+        value: amount
+      };
+      transactions.push(transaction);
+    });
+
+    const blockDetail = new Types.Block(
+      blockIdentifier,
+      parentBlockIdentifier,
+      timestamp,
+      transactions,
+    );
+    blockDetail.miner = blk.validator;
+    return new Types.BlockResponse(blockDetail);
+  }
+};
+
+const querySubscan = async (data) => {
+  const result = await axios.post(block_api, data, {
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+  if (result.status === 200) {
+    return result.data;
+  }
+};
+
+// blockSubscan(1665108);
+
 const blockWeb3 = async (blockHashOrBlockNumber) => {
   const blk = await web3.eth.getBlock(blockHashOrBlockNumber);
 
@@ -216,7 +334,9 @@ const blockWeb3 = async (blockHashOrBlockNumber) => {
 
 module.exports = {
   networkStatus,
+  networkStatusSubscan,
   block,
   blockTransaction,
   blockWeb3,
+  blockSubscan
 };

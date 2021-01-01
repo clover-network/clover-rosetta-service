@@ -56,7 +56,6 @@ async function clvSummary() {
           }
         };
         broadcast(JSON.stringify(response));
-        const txs = await Promise.all(_.map(block.transactions, id => web3.eth.getTransaction(id)));
         const info = {
           name: token,
           block_number: block.number,
@@ -66,9 +65,13 @@ async function clvSummary() {
           used: 0,
           miner: block.miner
         };
-        block.transactions = txs;
-        info.raw = JSON.stringify(block);
-        await Index.create(info);
+        try {
+          const txs = await Promise.all(_.map(block.transactions, id => web3.eth.getTransaction(id)));
+          block.transactions = txs;
+          info.raw = JSON.stringify(block);
+          await Index.create(info);
+        } catch (e) {
+        }
       }
 
       await Status.update({

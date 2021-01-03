@@ -57,6 +57,8 @@ const networkStatusSubscan = async () => {
     headers: {
       "Content-Type": "application/json"
     }
+  }, {
+    timeout: 6000
   });
   if (result.status === 200) {
     return result.data.data;
@@ -169,11 +171,10 @@ const blockSubscan = async (blockId) => {
   } : {
     block_hash: blockId
   };
-
   const meta = await networkStatusSubscan();
   if (_.isNumber(blockId) && blockId > meta.blockNum) {
     return;
-  };
+  }
   const result = await querySubscan(data);
   if (result.code === 0 && result.data) {
 

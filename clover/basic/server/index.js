@@ -61,10 +61,10 @@ async function startJob() {
   const { runEth } = require('./jobs/EthNetworkStatus');
   const { runDot } = require('./jobs/DotNetworkStatus');
   const { runClv } = require('./jobs/ClvNetworkStatus');
-  runBtc();
-  runEth();
+  //runBtc();
+  //runEth();
   runDot();
-  runClv();
+  //runClv();
   const { clvSummary } = require('./jobs/ClvSummary');
   clvSummary();
 }

@@ -1,4 +1,4 @@
-const { btc_rosetta_service } = require('../../config/config');
+const { btc_rosetta_service, btc_rpc: { host, port, username, password} } = require('../../config/config');
 const _ = require('lodash');
 const axios = require('axios');
 const RosettaSDK = require('../../../../sdk');
@@ -12,37 +12,35 @@ const Promise = require('bluebird');
 const { Op } = require('sequelize');
 const LZUTF8 = require('lzutf8');
 
+async function btcRpc(method, param = []) {
+  const time = new Date().getTime();
+  const body = {
+    jsonrpc: '1.0',
+    id: time,
+    method: method,
+    params: param
+  };
+
+  const result = await axios.post(`http://${username}:${password}@${host}:${port}`, body);
+  if (result.status === 200) {
+    return result.data;
+  }
+  return '';
+}
+
 async function doRun() {
   try {
-    const networkIdentifier = new RosettaSDK.Client.NetworkIdentifier('Bitcoin', 'Mainnet');
-    const networkRequest = new Types.NetworkRequest.constructFromObject({
-      network_identifier: networkIdentifier,
-      metadata: {}
-    });
-
+    const chaininfo = await btcRpc('getblockchaininfo');
     const status = await Status.findOne({
       where: {
         key: 'current_btc_block'
       }
     });
+    const index = chaininfo.result.blocks;
     const lastIndex = status.dataValues.value;
-    const result = await axios.post(btc_rosetta_service + 'network/status', networkRequest);
-    const body = result.data;
-    const index = body.current_block_identifier.index;
-    body.peers = [];
     if (index !== _.parseInt(lastIndex)) {
       console.log('new btc block detected, reporting with block id: ', index);
       status.value = index;
-      const response = {
-        type: 'network/status',
-        meta: {
-          network_identifier:{
-            blockchain: 'Bitcoin',
-            network: 'Mainnet'
-          },
-        },
-        data: body
-      };
       await status.save();
     }
   } catch (e) {
@@ -64,64 +62,52 @@ async function syncBlock() {
   start = start < 0 ? 0 : start;
   while (true) {
     try {
-      const networkRequest = {
-        network_identifier:{
-          blockchain: token,
-          network: 'Mainnet'
-        },
-        block_identifier: {
-          index: start
-        }
+
+      const result = await btcRpc('getblockhash', [start]);
+      const blockRes = await btcRpc('getblock', [result.result]);
+      const block = blockRes.result;
+      const info = {
+        name: token,
+        block_number: start,
+        block_hash: block.hash,
+        timestamp: block.time,
+        tx_count: block.tx.length,
+        used: 0
       };
 
-      const result = await axios.post(btc_rosetta_service + 'block', networkRequest, {
-        timeout: 10000
-      });
-      if (result.status === 200) {
-        const block = result.data.block;
-        const info = {
+      info.raw = LZUTF8.compress(JSON.stringify(block), {outputEncoding: 'StorageBinaryString'});
+      Block.create(info);
+      Block.destroy({
+        where: {
           name: token,
-          block_number: start,
-          block_hash: block.block_identifier.hash,
-          timestamp: block.timestamp,
-          tx_count: result.data.other_transactions.length,
-          used: 0
-        };
-
-        info.raw = LZUTF8.compress(JSON.stringify(result.data), {outputEncoding: 'StorageBinaryString'});
-        Block.create(info);
-        Block.destroy({
-          where: {
-            name: token,
-            block_number: {
-              [Op.lt]: start - 9
-            }
+          block_number: {
+            [Op.lt]: start - 9
           }
-        });
+        }
+      });
 
-        const response = {
-          type: 'network/tick',
-          meta: {
-            network_identifier:{
-              blockchain: token,
-              network: 'Mainnet'
-            },
+      const response = {
+        type: 'network/tick',
+        meta: {
+          network_identifier:{
+            blockchain: token,
+            network: 'Mainnet'
           },
-          data: info
-        };
-        broadcast(JSON.stringify(response));
+        },
+        data: info
+      };
+      broadcast(JSON.stringify(response));
 
-        // update difficulty
-        const summary = await Summary.findOne({
-          where: {
-            name: token
-          }
-        });
-        summary.difficulty = block.metadata.difficulty;
-        await summary.save();
-        await sleep(1000);
-        start++;
-      }
+      // update difficulty
+      const summary = await Summary.findOne({
+        where: {
+          name: token
+        }
+      });
+      summary.difficulty = block.difficulty;
+      await summary.save();
+      await sleep(1000);
+      start++;
 
     } catch (e) {
       console.error(e);

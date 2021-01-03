@@ -35,7 +35,7 @@ async function initApi(symbol) {
 }
 
 const networkStatus = async (symbol) => {
-  if (symbol === 'Polkadot') {
+  /**if (symbol === 'Polkadot') {
     const result = await axios.post(blocks, {
       "row": 1,
       "page": 0
@@ -62,7 +62,8 @@ const networkStatus = async (symbol) => {
         peers,
       );
     }
-  }
+    return;
+  }**/
   const api = await initApi(symbol);
   const block = await api.rpc.chain.getBlock();
   const currentBlockIdentifier = new Types.BlockIdentifier(block.block.header.number.toString(), block.block.header.hash.toHex());

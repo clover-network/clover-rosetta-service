@@ -36,7 +36,7 @@ async function doRun() {
         key: 'current_btc_block'
       }
     });
-    const index = chaininfo.result.blocks;
+    const index = chaininfo.result.blocks - 1;
     const lastIndex = status.dataValues.value;
     if (index !== _.parseInt(lastIndex)) {
       console.log('new btc block detected, reporting with block id: ', index);
@@ -63,7 +63,7 @@ async function syncBlock() {
   while (true) {
     try {
       const chaininfo = await btcRpc('getblockchaininfo');
-      if (chaininfo.result.blocks < start) {
+      if (start >= chaininfo.result.blocks) {
         await sleep(30000);
       }
       const result = await btcRpc('getblockhash', [start]);
@@ -114,7 +114,7 @@ async function syncBlock() {
 
     } catch (e) {
       console.error(e);
-      await sleep(90000);
+      await sleep(10000);
     }
   }
 }

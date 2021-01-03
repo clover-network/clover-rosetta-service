@@ -1,4 +1,4 @@
-const { blockSubscan, networkStatus } = require('../../chains/polkadot/service');
+const { block, networkStatus } = require('../../chains/polkadot/service');
 const _ = require('lodash');
 const Status = require('../../data/models/status');
 const Block = require('../../data/models/block');
@@ -52,7 +52,7 @@ async function syncBlock() {
   start = start < 0 ? 0 : start;
   while (true) {
     try {
-      const result = await blockSubscan(start);
+      const result = await block(start, token);
       if (!result) {
         await sleep(3000);
         continue;

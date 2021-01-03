@@ -130,6 +130,7 @@ async function syncBlock() {
       }
 
     } catch (e) {
+      console.error(e);
       await sleep(10000);
     }
   }

@@ -74,7 +74,9 @@ async function syncBlock() {
         }
       };
 
-      const result = await axios.post(btc_rosetta_service + 'block', networkRequest);
+      const result = await axios.post(btc_rosetta_service + 'block', networkRequest, {
+        timeout: 10000
+      });
       if (result.status === 200) {
         const block = result.data.block;
         const info = {
@@ -122,7 +124,8 @@ async function syncBlock() {
       }
 
     } catch (e) {
-      await sleep(30000);
+      console.error(e);
+      await sleep(90000);
     }
   }
 }

@@ -55,6 +55,7 @@ async function syncBlock() {
       const result = await blockSubscan(start);
       if (!result) {
         await sleep(3000);
+        continue;
       }
       if (result.block) {
         const block = result.block;
@@ -95,6 +96,7 @@ async function syncBlock() {
       }
 
     } catch (e) {
+      console.error(e);
       await sleep(6000);
     }
   }

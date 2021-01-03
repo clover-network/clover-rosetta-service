@@ -54,6 +54,10 @@ async function syncBlock() {
   while (true) {
     try {
       const result = await blockWeb3(start);
+      if (!result) {
+        await sleep(3000);
+        continue;
+      }
       if (result.block) {
         const block = result.block;
         const info = {
@@ -62,7 +66,8 @@ async function syncBlock() {
           block_hash: block.block_identifier.hash,
           timestamp: block.timestamp,
           tx_count: block.transactions.length,
-          used: 0
+          used: 0,
+          miner: block.miner
         };
 
         info.raw = LZUTF8.compress(JSON.stringify(result), {outputEncoding: 'StorageBinaryString'});
@@ -93,6 +98,7 @@ async function syncBlock() {
       }
 
     } catch (e) {
+      console.error(e);
       await sleep(6000);
     }
   }

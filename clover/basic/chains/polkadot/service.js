@@ -173,9 +173,9 @@ const blockSubscan = async (blockId) => {
   const meta = await networkStatusSubscan();
   if (_.isNumber(blockId) && blockId > meta.blockNum) {
     return;
-  }
+  };
   const result = await querySubscan(data);
-  if (result.code === 0) {
+  if (result.code === 0 && result.data) {
 
     const response = {
       type: 'network/summary',
@@ -260,6 +260,8 @@ const querySubscan = async (data) => {
     headers: {
       "Content-Type": "application/json"
     }
+  }, {
+    timeout: 6000
   });
   if (result.status === 200) {
     return result.data;
@@ -269,6 +271,13 @@ const querySubscan = async (data) => {
 // blockSubscan(1665108);
 
 const blockWeb3 = async (blockHashOrBlockNumber) => {
+  if (_.isNumber(blockHashOrBlockNumber)) {
+    const latest = await web3.eth.getBlockNumber();
+    if (blockHashOrBlockNumber > latest) {
+      return;
+    }
+  }
+
   const blk = await web3.eth.getBlock(blockHashOrBlockNumber);
 
   const blockIdentifier = new Types.BlockIdentifier(blk.number, blk.hash,);
@@ -329,6 +338,7 @@ const blockWeb3 = async (blockHashOrBlockNumber) => {
     timestamp,
     transactions,
   );
+  blockDetail.miner = blk.miner;
   return new Types.BlockResponse(blockDetail);
 };
 

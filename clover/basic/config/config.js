@@ -20,6 +20,6 @@ module.exports = {
     block_api: 'https://polkadot.subscan.io/api/scan/block',
     metadata: 'https://polkadot.subscan.io/api/scan/metadata',
     search_api: 'https://polkadot.subscan.io/api/scan/search',
-    token: ''
+    blocks: 'https://polkadot.subscan.io/api/scan/blocks'
   }
 };

@@ -1,7 +1,7 @@
 const RosettaSDK = require('../../../../sdk');
 const Types = RosettaSDK.Client;
 const Polkadot = require("@polkadot/api");
-const { polkadot_url_ws, clover_url_ws, dot_gensis, clv_gensis, subscan: { block_api, metadata } } = require('../../config/config');
+const { polkadot_url_ws, clover_url_ws, dot_gensis, clv_gensis, subscan: { block_api, metadata, blocks } } = require('../../config/config');
 const dotProvider = new Polkadot.WsProvider(polkadot_url_ws);
 const clvProvider = new Polkadot.WsProvider(clover_url_ws);
 const _ = require('lodash');
@@ -35,6 +35,34 @@ async function initApi(symbol) {
 }
 
 const networkStatus = async (symbol) => {
+  if (symbol === 'Polkadot') {
+    const result = await axios.post(blocks, {
+      "row": 1,
+      "page": 0
+    }, {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }, {
+      timeout: 6000
+    });
+    if (result.status === 200 && result.data.data) {
+      const block = result.data.data.blocks[0];
+      const currentBlockIdentifier = new Types.BlockIdentifier(block.block_num, block.hash);
+      const currentBlockTimestamp = block.block_timestamp;
+      const genesisBlockIdentifier = new Types.BlockIdentifier(0, symbol === 'dot' ? dot_gensis : clv_gensis);
+      const peers = [
+        new Types.Peer(''),
+      ];
+
+      return new Types.NetworkStatusResponse(
+        currentBlockIdentifier,
+        currentBlockTimestamp,
+        genesisBlockIdentifier,
+        peers,
+      );
+    }
+  }
   const api = await initApi(symbol);
   const block = await api.rpc.chain.getBlock();
   const currentBlockIdentifier = new Types.BlockIdentifier(block.block.header.number.toString(), block.block.header.hash.toHex());

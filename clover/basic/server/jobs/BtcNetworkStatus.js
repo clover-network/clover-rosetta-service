@@ -62,7 +62,10 @@ async function syncBlock() {
   start = start < 0 ? 0 : start;
   while (true) {
     try {
-
+      const chaininfo = await btcRpc('getblockchaininfo');
+      if (chaininfo.result.blocks < start) {
+        await sleep(30000);
+      }
       const result = await btcRpc('getblockhash', [start]);
       const blockRes = await btcRpc('getblock', [result.result]);
       const block = blockRes.result;

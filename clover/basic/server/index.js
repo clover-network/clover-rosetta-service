@@ -70,11 +70,11 @@ async function startJob() {
 }
 
 async function initDb() {
-  await Status.sync({ force: true });
-  await Summary.sync({ force: true });
-  await Block.sync({ force: true });
-  await Index.sync({ force: true });
-  return Promise.all([
+  await Status.sync({ force: false });
+  await Summary.sync({ force: false });
+  await Block.sync({ force: false });
+  await Index.sync({ force: false });
+  /**return Promise.all([
     Status.create({key: 'current_btc_block', value: '0'}),
     Status.create({key: 'current_eth_block', value: '0'}),
     Status.create({key: 'current_dot_block', value: '0'}),
@@ -85,7 +85,7 @@ async function initDb() {
     Summary.create({name: 'Bitcoin', price: '26772.43', transactions: '600336533', market: '497064920914', price_change_24h: '-2.78', difficulty: '22117795561453'}),
     Summary.create({name: 'Ethereum', price: '728.46', transactions: '952024646', market: '82835747820', price_change_24h: '12.09', difficulty: '3787986950834474', gas_price: '40'}),
     Summary.create({name: 'Polkadot', price: '8.05', transactions: '496036', market: '4923109321', price_change_24h: '9.91'}),
-  ]);
+  ]);**/
 }
 
 (async () => {

@@ -8,7 +8,13 @@ const { clover_url_http } = require('../../config/config');
 const web3 = new Web3(new Web3.providers.HttpProvider(clover_url_http));
 
 async function clvSummary() {
-  let lastIndex = 0;
+  const init = await Status.findOne({
+    where: {
+      key: 'processed_clv_block'
+    },
+    raw: true
+  });
+  let lastIndex = parseInt(init.value);
   const token = 'Clover';
   while(true) {
     try {

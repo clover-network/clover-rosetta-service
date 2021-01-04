@@ -103,6 +103,7 @@ const block = async (blockHashOrBlockNumber, symbol) => {
   } else {
     block = await api.rpc.chain.getBlock(blockHashOrBlockNumber);
   }
+  const header = await api.derive.chain.getHeader(block.block.header.hash);
   const blockIdentifier = new Types.BlockIdentifier(block.block.header.number, block.block.hash.toString());
   const parentBlockIdentifier = new Types.BlockIdentifier(block.block.header.number - 1, block.block.header.parentHash.toString());
   let timestamp = '0';
@@ -120,21 +121,25 @@ const block = async (blockHashOrBlockNumber, symbol) => {
         phase.asApplyExtrinsic.eq(index)
       );
       let amount = 0;
+      let to = '';
       if (`${section}.${method}` === 'balances.transfer') {
+        to = args[0].toString();
         amount = args[1];
       }
       const operations = [
         Types.Operation.constructFromObject({
           'operation_identifier': new Types.OperationIdentifier(0),
           'type': `${section}.${method}`,
-          'status': 'Success',
+          'status': 'SUCCESS',
           'account': new Types.AccountIdentifier(ex.signer.toString()),
           'amount': new Types.Amount(
             amount,
             new Types.Currency(symbol === 'Polkadot' ? 'DOT' : 'CLV', symbol === 'Polkadot' ? 10 : 12)
-          ),
+          )
         }),
       ];
+      operations[0].from = ex.signer.toString();
+      operations[0].to = to;
       transactions.push(new Types.Transaction(transactionIdentifier, operations));
     }
   });
@@ -145,6 +150,7 @@ const block = async (blockHashOrBlockNumber, symbol) => {
     timestamp,
     transactions,
   );
+  blockDetail.miner = header.author.toString();
   return new Types.BlockResponse(blockDetail);
 };
 

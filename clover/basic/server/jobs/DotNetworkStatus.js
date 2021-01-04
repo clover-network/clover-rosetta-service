@@ -21,16 +21,6 @@ async function doRun() {
     if (index !== _.parseInt(lastIndex)) {
       console.log('new dot block detected, reporting with block id: ', index);
       status.value = index;
-      const response = {
-        type: 'network/status',
-        meta: {
-          network_identifier:{
-            blockchain: 'Polkadot',
-            network: 'Mainnet'
-          },
-        },
-        data: body
-      };
       await status.save();
     }
   } catch (e) {
@@ -54,7 +44,7 @@ async function syncBlock() {
     try {
       const result = await block(start, token);
       if (!result) {
-        await sleep(3000);
+        await sleep(1000);
         continue;
       }
       if (result.block) {
@@ -97,7 +87,6 @@ async function syncBlock() {
 
     } catch (e) {
       console.error(e);
-      await sleep(6000);
     }
   }
 }

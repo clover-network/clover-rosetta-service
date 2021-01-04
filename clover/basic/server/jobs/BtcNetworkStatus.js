@@ -69,13 +69,19 @@ async function syncBlock() {
       const result = await btcRpc('getblockhash', [start]);
       const blockRes = await btcRpc('getblock', [result.result]);
       const block = blockRes.result;
+      const coinbase = await btcRpc('getrawtransaction', [block.tx[0], true]);
+      let miner = '';
+      if (coinbase.result.vout && coinbase.result.vout[0].scriptPubKey) {
+        miner = coinbase.result.vout[0].scriptPubKey.addresses[0];
+      }
       const info = {
         name: token,
         block_number: start,
         block_hash: block.hash,
         timestamp: block.time,
         tx_count: block.tx.length,
-        used: 0
+        used: 0,
+        miner: miner
       };
 
       info.raw = LZUTF8.compress(JSON.stringify(block), {outputEncoding: 'StorageBinaryString'});

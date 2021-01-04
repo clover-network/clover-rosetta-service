@@ -86,7 +86,7 @@ async function searchBtc(key) {
       result.block = block;
       return result;
     } else {
-      const transaction = await btcRpc('gettransaction', [key]);
+      const transaction = await btcRpc('getrawtransaction', [key, true]);
       if (!transaction) {
         return;
       }
@@ -227,7 +227,7 @@ async function searchClv(key) {
   }
 }
 
-// search('0x11f52AC55FEEaD02772Acb048234D16E04C33ADA');
+//search('022f239cc102e3830c8198fc11c3d411619b5bd7d8262b7316cf3f16827d1d20');
 
 module.exports = {
   search

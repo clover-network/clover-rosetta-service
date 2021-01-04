@@ -1,4 +1,4 @@
-const { eth_rosetta_service } = require('../../config/config');
+const { eth_rosetta_service, eth_rpc } = require('../../config/config');
 const _ = require('lodash');
 const axios = require('axios');
 const RosettaSDK = require('../../../../sdk');
@@ -12,38 +12,21 @@ const BigNumber = require('bignumber.js');
 const Web3 = require('web3');
 const { Op } = require('sequelize');
 const LZUTF8 = require('lzutf8');
+const web3 = new Web3(new Web3.providers.HttpProvider(eth_rpc));
 
 async function doRun() {
   try {
-    const networkIdentifier = new RosettaSDK.Client.NetworkIdentifier('Ethereum', 'Mainnet');
-    const networkRequest = new Types.NetworkRequest.constructFromObject({
-      network_identifier: networkIdentifier,
-      metadata: {}
-    });
-
+    const block = await web3.eth.getBlock('latest');
     const status = await Status.findOne({
       where: {
         key: 'current_eth_block'
       }
     });
     const lastIndex = status.dataValues.value;
-    const result = await axios.post(eth_rosetta_service + 'network/status', networkRequest);
-    const body = result.data;
-    body.peers = [];
-    const index = body.current_block_identifier.index;
+    const index = block.number;
     if (index !== _.parseInt(lastIndex)) {
       console.log('new eth block detected, reporting with block id: ', index);
       status.value = index;
-      const response = {
-        type: 'network/status',
-        meta: {
-          network_identifier:{
-            blockchain: 'Ethereum',
-            network: 'Mainnet'
-          },
-        },
-        data: body
-      };
       await status.save();
     }
   } catch (e) {
@@ -65,73 +48,56 @@ async function syncBlock() {
   start = start < 0 ? 0 : start;
   while (true) {
     try {
-      const networkRequest = {
-        network_identifier:{
-          blockchain: token,
-          network: 'Mainnet'
-        },
-        block_identifier: {
-          index: start
-        }
+      const head = await web3.eth.getBlock('latest');
+      if (start > head.number) {
+        await sleep(3000);
+        continue;
+      }
+      const block = await web3.eth.getBlock(start, true);
+      const info = {
+        name: token,
+        block_number: start,
+        block_hash: block.hash,
+        timestamp: block.timestamp,
+        tx_count: block.transactions.length,
+        miner: block.miner,
+        used: 0
       };
 
-      const result = await axios.post(eth_rosetta_service + 'block', networkRequest);
-      if (result.status === 200) {
-        const block = result.data.block;
-        const info = {
+      let rewords = new BigNumber(0);
+      _.each(block.transactions, (tx, idx) => {
+        rewords = rewords.plus(new BigNumber(tx.gas).multipliedBy(new BigNumber(tx.gasPrice)));
+      });
+      info.rewords = rewords.toString();
+      info.raw = LZUTF8.compress(JSON.stringify(block), {outputEncoding: 'StorageBinaryString'});
+      Block.create(info);
+      Block.destroy({
+        where: {
           name: token,
-          block_number: start,
-          block_hash: block.block_identifier.hash,
-          timestamp: block.timestamp,
-          tx_count: block.transactions.length,
-          used: 0
-        };
-        if (block.transactions[0].operations[0].type === 'MINER_REWARD') {
-          info.miner = block.transactions[0].operations[0].account.address;
+          block_number: {
+            [Op.lt]: start - 9
+          }
         }
+      });
 
-        let rewords = new BigNumber(0);
-        _.each(block.transactions, (tx, idx) => {
-          if (idx === 0 && tx.operations[0].type === 'MINER_REWARD') {
-            rewords = rewords.plus(BigNumber(tx.operations[0].amount.value));
-          } else if (tx.metadata && tx.metadata.receipt) {
-            rewords = rewords.plus(new BigNumber(Web3.utils.hexToNumberString(tx.metadata.receipt.gasUsed)).multipliedBy(new BigNumber(Web3.utils.hexToNumberString(tx.metadata.gas_price))));
-          }
-          if (tx.metadata && tx.metadata.trace && tx.metadata.trace.calls) {
-            tx.metadata.trace = _.omit(tx.metadata.trace, ['calls']);
-          }
-        });
-        info.rewords = rewords.toString();
-        info.raw = LZUTF8.compress(JSON.stringify(result.data), {outputEncoding: 'StorageBinaryString'});
-        Block.create(info);
-        Block.destroy({
-          where: {
-            name: token,
-            block_number: {
-              [Op.lt]: start - 9
-            }
-          }
-        });
-
-        const response = {
-          type: 'network/tick',
-          meta: {
-            network_identifier:{
-              blockchain: token,
-              network: 'Mainnet'
-            },
+      const response = {
+        type: 'network/tick',
+        meta: {
+          network_identifier:{
+            blockchain: token,
+            network: 'Mainnet'
           },
-          data: info
-        };
-        broadcast(JSON.stringify(response));
+        },
+        data: info
+      };
+      broadcast(JSON.stringify(response));
 
-        await sleep(1000);
-        start++;
-      }
+      await sleep(1000);
+      start++;
 
     } catch (e) {
       console.error(e);
-      await sleep(10000);
+      //await sleep(10000);
     }
   }
 }

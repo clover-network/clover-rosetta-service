@@ -17,6 +17,7 @@ module.exports = {
     username: 'rosetta',
     password: 'rosetta'
   },
+  eth_rpc: 'http://rosetta:rosetta@proxy.ankr.com:9545',
   subscan: {
     block_api: 'https://polkadot.subscan.io/api/scan/block',
     metadata: 'https://polkadot.subscan.io/api/scan/metadata',

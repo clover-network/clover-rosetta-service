@@ -30,6 +30,27 @@ paths:
       tags:
         - Network
       x-eov-operation-handler: controllers/NetworkController
+  /network/rank:
+    post:
+      description: This is the Rank API
+      operationId: networkRank
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloverGeneralResponse'
+          description: Expected response to a json
+      summary: Get Network Rank
+      tags:
+        - Network
+      x-eov-operation-handler: controllers/NetworkController
   /network/tick:
     post:
       description: This is the Tick API

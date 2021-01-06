@@ -17,11 +17,11 @@ let ClvAPi = undefined;
 
 async function initApi(symbol) {
   if (symbol === 'Polkadot') {
-    // if (!DotApi) {
+    if (!DotApi) {
       DotApi = await Polkadot.ApiPromise.create({
         provider: dotProvider
       });
-    // }
+    }
     return Promise.resolve(DotApi);
   } else {
     if (!ClvAPi) {

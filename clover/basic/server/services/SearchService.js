@@ -73,11 +73,13 @@ async function searchBtc(key) {
     const result = {
       blockchain: '',
       block: {},
+      account: {},
       transaction: {}
     };
     result.blockchain = 'Bitcoin';
     if (isBtcAddress(key)) {
-      // result.account.balance = await btcRpc('getreceivedbyaddress', [key, 6]);
+      result.account = await btcRpc('getaddressinfo', [key]);
+      return result;
     } else if (isBtcBlock(key)) {
       const block = await btcRpc('getblock', [key]);
       if (!block) {
@@ -227,7 +229,7 @@ async function searchClv(key) {
   }
 }
 
-//search('022f239cc102e3830c8198fc11c3d411619b5bd7d8262b7316cf3f16827d1d20');
+//search('3FZo494Y3ouvBFuYEP5gGs8mhFRyp3Vj5k');
 
 module.exports = {
   search

@@ -3,6 +3,7 @@ const { networkStatus, block, blockTransaction, blockWeb3, blockSubscan } = requ
 const Summary = require('../../data/models/summary');
 const Block = require('../../data/models/block');
 const Status = require('../../data/models/status');
+const Rank = require('../../data/models/rank');
 const _ = require('lodash');
 const axios = require('axios');
 const { search } = require('./SearchService');
@@ -45,6 +46,14 @@ const generalService = async (params, msg) => {
       },
       order: [
         ['id', 'DESC'],
+      ],
+      raw: true
+    });
+  }
+  if (payload.network_identifier && msg.url === '/network/rank') {
+    return await Rank.findAll({
+      order: [
+        ['balance', 'DESC'],
       ],
       raw: true
     });

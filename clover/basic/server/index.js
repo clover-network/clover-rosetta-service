@@ -6,6 +6,7 @@ const Status = require('../data/models/status');
 const Summary = require('../data/models/summary');
 const Block = require('../data/models/block');
 const Index = require('../data/models/index');
+const Rank = require('../data/models/rank');
 const Promise = require('bluebird');
 
 
@@ -22,6 +23,7 @@ function startRosetta() {
   Server.register('/network/summary', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/tick', ServiceHandlers.GeneralService.generalService);
   Server.register('/network/search', ServiceHandlers.GeneralService.generalService);
+  Server.register('/network/rank', ServiceHandlers.GeneralService.generalService);
 
   /* Data API: Block */
   Server.register('/block', ServiceHandlers.GeneralService.generalService);
@@ -67,6 +69,8 @@ async function startJob() {
   runClv();
   const { clvSummary } = require('./jobs/ClvSummary');
   clvSummary();
+  const { clvRank } = require('./jobs/ClvRank');
+  clvRank();
 }
 
 async function initDb() {
@@ -74,6 +78,7 @@ async function initDb() {
   await Summary.sync({ force: false });
   await Block.sync({ force: false });
   await Index.sync({ force: false });
+  await Rank.sync({ force: true });
   /**return Promise.all([
     Status.create({key: 'current_btc_block', value: '0'}),
     Status.create({key: 'current_eth_block', value: '0'}),

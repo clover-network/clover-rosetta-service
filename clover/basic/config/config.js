@@ -3,7 +3,7 @@ module.exports = {
   infura_token: 'bd6d2612b6c8462a99385dc5c89cfd41',
   clover_url_http: 'https://rpc.clover.finance',
   polkadot_url_ws: 'wss://rpc.polkadot.io',
-  polkadot_url_ws1: 'ws://172.16.2.148:9944',
+  polkadot_url_ws1: 'ws://121.40.137.1:9944',
   clover_url_ws: 'wss://api.clover.finance',
   rosetta_port: 9911,
   ws_port: 9922,

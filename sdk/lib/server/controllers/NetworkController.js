@@ -53,11 +53,16 @@ const networkSearch = async (request, response) => {
   await Controller.handleRequest(request, response);
 };
 
+const networkRank = async (request, response) => {
+  await Controller.handleRequest(request, response);
+};
+
 module.exports = {
   networkList,
   networkOptions,
   networkStatus,
   networkSummary,
   networkTick,
-  networkSearch
+  networkSearch,
+  networkRank
 };

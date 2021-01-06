@@ -14,8 +14,8 @@ module.exports = {
   btc_rpc: {
     host: 'proxy.ankr.com',
     port: 8332,
-    username: 'rosetta',
-    password: 'rosetta'
+    username: process.env.rosetta_username,
+    password: process.env.rosetta_password
   },
   eth_rpc: 'http://rosetta:rosetta@proxy.ankr.com:9545',
   subscan: {
